@@ -344,6 +344,11 @@ TOOL_POLICIES: dict[str, ToolPolicy] = {
         kind="ipc_action",
         path_arg="project_path",
     ),
+    # ERC tool (headless kicad-cli, read-only)
+    "run_erc": ToolPolicy(
+        kind="query",
+        path_arg="schematic_path",
+    ),
     "get_effective_design_rules": ToolPolicy(
         kind="query",
         path_arg="project_path",
