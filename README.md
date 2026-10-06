@@ -45,7 +45,7 @@ Tested on **KiCad 10.0 / Linux & Windows**.
 - KiCad 10.0 or higher
 - [`uv`](https://github.com/astral-sh/uv) — manages the Python virtual environment and installs the correct Python version automatically
   - `curl -Lsf https://astral.sh/uv/install.sh | sh`
-- An API key for OpenAI, Anthropic, or a compatible LLM provider
+- An API key for OpenAI, Anthropic, Amazon Bedrock, or a compatible LLM provider (Ollama needs none)
 
 ## Installation
 
@@ -69,6 +69,13 @@ mkdir -p "$KICAD_PLUGIN_DIR"
 unzip kicad_ai_assistant.zip -d "$KICAD_PLUGIN_DIR"
 ```
 
+**macOS:**
+```bash
+KICAD_PLUGIN_DIR=~/Documents/KiCad/10.0/scripting/plugins
+mkdir -p "$KICAD_PLUGIN_DIR"
+unzip kicad_ai_assistant.zip -d "$KICAD_PLUGIN_DIR"
+```
+
 **Windows (PowerShell):**
 ```powershell
 $KICAD_PLUGIN_DIR = "$env:USERPROFILE\Documents\KiCad\10.0\scripting\plugins"
@@ -86,6 +93,11 @@ make dist-plugin          # produces dist/kicad_ai_assistant.zip
 KICAD_PLUGIN_DIR=~/.local/share/kicad/10.0/scripting/plugins
 mkdir -p "$KICAD_PLUGIN_DIR"
 unzip dist/kicad_ai_assistant.zip -d "$KICAD_PLUGIN_DIR"
+
+# macOS:
+KICAD_PLUGIN_DIR=~/Documents/KiCad/10.0/scripting/plugins
+mkdir -p "$KICAD_PLUGIN_DIR"
+unzip dist/kicad_ai_assistant.zip -d "$KICAD_PLUGIN_DIR"
 ```
 
 ### 3. Create the plugin virtual environment
@@ -95,6 +107,12 @@ Run the setup script from inside the installed plugin directory to create a `.ve
 **Linux:**
 ```bash
 cd ~/.local/share/kicad/10.0/scripting/plugins/kicad_ai_assistant
+./setup_plugin.sh
+```
+
+**macOS:**
+```bash
+cd ~/Documents/KiCad/10.0/scripting/plugins/kicad_ai_assistant
 ./setup_plugin.sh
 ```
 
@@ -130,10 +148,14 @@ All settings can be changed through **Options → Settings** in the plugin panel
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `llm_provider` | LLM provider: `openai`, `anthropic`, or `custom` | `openai` |
-| `llm_api_key` | Your LLM API key (stored with owner-only permissions) | *(empty)* |
-| `llm_model` | Model name | `gpt-4o` |
-| `llm_base_url` | Custom endpoint URL (when `llm_provider` is `custom`) | *(provider default)* |
+| `llm_provider` | LLM provider: `openai`, `anthropic`, `ollama`, or `bedrock` | `openai` |
+| `llm_api_key` | Your LLM API key (stored with owner-only permissions). For `bedrock`, a Bedrock API key used as a bearer token | *(empty)* |
+| `llm_model` | Model name. For `bedrock`, a Bedrock model or inference-profile id — newer Claude models need the cross-region profile form, e.g. `us.anthropic.claude-opus-5-5` (swap `us.` for your region) | `gpt-4o` |
+| `llm_base_url` | Custom endpoint URL (overrides the provider default) | *(provider default)* |
+| `llm_aws_region` | AWS region for the Bedrock endpoint (also used for SigV4 signing) | `us-east-1` |
+| `llm_aws_access_key_id` | AWS access key id — set this (plus the secret) to use SigV4 instead of a Bedrock API key | *(empty)* |
+| `llm_aws_secret_access_key` | AWS secret access key for SigV4 auth | *(empty)* |
+| `llm_aws_session_token` | Optional STS session token for temporary AWS credentials | *(empty)* |
 | `server_port` | Fixed port for the built-in MCP server (`0` = auto) | `0` |
 | `show_tool_log` | Show tool-call log panel by default | `true` |
 | `llm_context_tokens` | Total context window size in tokens | `128000` |
