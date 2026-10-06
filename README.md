@@ -216,6 +216,9 @@ kcaa
 | `add_label_to_schematic` | Add a local net label |
 | `list_labels_in_schematic` | List all local net labels |
 | `delete_label_from_schematic` | Delete net labels |
+| `add_no_connect` | Add a no-connect flag at a pin coordinate |
+| `list_no_connects` | List all no-connect flags |
+| `remove_no_connect` | Remove no-connect flag(s) by coordinate |
 | `get_schematic_sheet_info` | Get drawing area, paper size, and grid |
 | `find_free_area` | Find candidate areas for placing a block |
 
