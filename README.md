@@ -12,7 +12,7 @@ Tested on **KiCad 10.0 / Linux & Windows**.
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-    - [1. Clone the repository](#1-clone-the-repository)
+    - [1. Clone the repository (optional)](#1-clone-the-repository-optional)
     - [2. Install the plugin](#2-install-the-plugin)
     - [3. Create the plugin virtual environment](#3-create-the-plugin-virtual-environment)
     - [4. Load the plugin in KiCad](#4-load-the-plugin-in-kicad)
@@ -31,8 +31,8 @@ Tested on **KiCad 10.0 / Linux & Windows**.
     - [PCB Placement](#pcb-placement)
     - [PCB Groups](#pcb-groups)
     - [PCB Zones](#pcb-zones)
-    - [DRC & Design Rules](#drc--design-rules)
-    - [Versioning & Export](#versioning--export)
+    - [DRC \& Design Rules](#drc--design-rules)
+    - [Versioning \& Export](#versioning--export)
     - [Skill System](#skill-system)
     - [KiCad IPC](#kicad-ipc)
   - [Project Structure](#project-structure)
@@ -54,8 +54,8 @@ Tested on **KiCad 10.0 / Linux & Windows**.
 Only needed if you want to build the plugin from source or contribute to the project. Skip this step if you're downloading the pre-built plugin from the Releases page.
 
 ```bash
-git clone https://github.com/paul356/kcaa.git
-cd kcaa
+git clone https://github.com/paul356/KiCad-AI-Assistant.git
+cd KiCad-AI-Assistant
 ```
 
 ### 2. Install the plugin
@@ -160,6 +160,15 @@ All settings can be changed through **Options → Settings** in the plugin panel
 | `show_tool_log` | Show tool-call log panel by default | `true` |
 | `llm_context_tokens` | Total context window size in tokens | `128000` |
 | `llm_compact_threshold` | Trigger context compaction at this usage fraction | `0.70` |
+
+### Amazon Bedrock
+
+Bedrock requests go to the native Bedrock Runtime `InvokeModel` API (not the OpenAI-compatible endpoint, which only serves non-Claude models), using the Anthropic Messages format. Authentication is chosen automatically:
+
+- **Bedrock API key** — leave the AWS credential fields blank and put the key in `llm_api_key`; it is sent as a bearer token.
+- **AWS SigV4** — set `llm_aws_access_key_id` + `llm_aws_secret_access_key` (and optionally `llm_aws_session_token`); requests are signed with SigV4 for the configured `llm_aws_region`.
+
+Use a model id enabled in your account/region — the cross-region inference-profile ids work well, e.g. `us.anthropic.claude-opus-5-5` or a versioned id like `us.anthropic.claude-sonnet-4-5-20250929-v1:0`. List yours with `aws bedrock list-inference-profiles --region <region>`. Responses are streamed to the chat panel in a single block, since Bedrock's streaming uses a binary framing the plugin's transport does not decode.
 
 ## Standalone MCP Server
 
