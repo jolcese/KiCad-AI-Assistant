@@ -49,6 +49,12 @@ TOOL_POLICIES: dict[str, ToolPolicy] = {
         auto_snapshot=True,
         mark_dirty=True,
     ),
+    "create_symbol": ToolPolicy(kind="file_mutation"),
+    "create_symbol_library": ToolPolicy(kind="file_mutation"),
+    "add_symbols_to_library": ToolPolicy(kind="file_mutation"),
+    "remove_symbols_from_library": ToolPolicy(kind="file_mutation"),
+    "delete_symbol_library": ToolPolicy(kind="file_mutation"),
+    "find_symbols_not_in_libraries": ToolPolicy(kind="query"),
     "place_symbol_relative": ToolPolicy(
         kind="file_mutation",
         path_arg="schematic_path",
@@ -164,6 +170,10 @@ TOOL_POLICIES: dict[str, ToolPolicy] = {
     # Writes .kicad_mod files into the target library; the PCB itself is
     # never modified, so no PCB snapshot/dirty tracking is attached.
     "add_footprints_to_library": ToolPolicy(kind="file_mutation"),
+    # Removes .kicad_mod files from the target library / deletes empty
+    # libraries; the PCB itself is never modified.
+    "remove_footprints_from_library": ToolPolicy(kind="file_mutation"),
+    "delete_footprint_library": ToolPolicy(kind="file_mutation"),
     # PCB query tools
     "get_board_info": ToolPolicy(kind="query"),
     "list_footprints": ToolPolicy(kind="query"),
