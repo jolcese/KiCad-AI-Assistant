@@ -32,6 +32,7 @@ from kcaa.tools.kipy_tools import register_kipy_tools
 
 # Plugin profile tools — always imported (skip-based, no kicad-cli dependency)
 from kcaa.tools.netlist_tools import register_netlist_tools
+from kcaa.tools.no_connect_tools import register_no_connect_tools
 from kcaa.tools.pcb_edit_tools import register_pcb_edit_tools
 from kcaa.tools.pcb_group_tools import register_pcb_group_tools
 from kcaa.tools.pcb_library_tools import register_pcb_library_tools
@@ -123,6 +124,7 @@ def _register_plugin_profile(mcp: FastMCP) -> None:
     register_symbol_edit_tools(mcp)
     register_sheet_tools(mcp)
     register_wire_edit_tools(mcp)
+    register_no_connect_tools(mcp)
     register_pcb_library_tools(mcp)
     register_pcb_query_tools(mcp)
     register_pcb_placement_tools(mcp)
@@ -186,6 +188,7 @@ def _register_full_profile(mcp: FastMCP) -> None:
     register_symbol_edit_tools(mcp)
     register_sheet_tools(mcp)
     register_wire_edit_tools(mcp)
+    register_no_connect_tools(mcp)
     register_pcb_library_tools(mcp)
     register_pcb_query_tools(mcp)
     register_pcb_placement_tools(mcp)
