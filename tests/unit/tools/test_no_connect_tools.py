@@ -119,9 +119,7 @@ class TestAddNoConnect:
         assert _count_no_connects(tmp_sch) == before
 
     def test_non_finite_coords_rejected(self, tools, tmp_sch):
-        result = asyncio.run(
-            tools["add_no_connect"](schematic_path=tmp_sch, x=float("nan"), y=1.0)
-        )
+        result = asyncio.run(tools["add_no_connect"](schematic_path=tmp_sch, x=float("nan"), y=1.0))
         assert "error" in result
 
     def test_non_schematic_path_rejected(self, tools):
@@ -167,17 +165,13 @@ class TestRemoveNoConnect:
         asyncio.run(tools["add_no_connect"](schematic_path=tmp_sch, x=160.0, y=130.0))
         assert _count_no_connects(tmp_sch) == 1
 
-        result = asyncio.run(
-            tools["remove_no_connect"](schematic_path=tmp_sch, x=160.0, y=130.0)
-        )
+        result = asyncio.run(tools["remove_no_connect"](schematic_path=tmp_sch, x=160.0, y=130.0))
         assert result.get("success") is True
         assert result["deleted_count"] == 1
         assert _count_no_connects(tmp_sch) == 0
 
     def test_remove_no_match_is_noop(self, tools, tmp_sch):
-        result = asyncio.run(
-            tools["remove_no_connect"](schematic_path=tmp_sch, x=999.0, y=999.0)
-        )
+        result = asyncio.run(tools["remove_no_connect"](schematic_path=tmp_sch, x=999.0, y=999.0))
         assert result.get("success") is True
         assert result["deleted_count"] == 0
         assert result.get("file_modified") is None
@@ -185,9 +179,7 @@ class TestRemoveNoConnect:
     def test_remove_honors_tolerance(self, tools, tmp_sch):
         asyncio.run(tools["add_no_connect"](schematic_path=tmp_sch, x=140.0, y=140.0))
         # 0.5 mm away: outside the default 0.01 tolerance, inside a 1.0 tolerance.
-        miss = asyncio.run(
-            tools["remove_no_connect"](schematic_path=tmp_sch, x=140.5, y=140.0)
-        )
+        miss = asyncio.run(tools["remove_no_connect"](schematic_path=tmp_sch, x=140.5, y=140.0))
         assert miss["deleted_count"] == 0
         hit = asyncio.run(
             tools["remove_no_connect"](schematic_path=tmp_sch, x=140.5, y=140.0, tolerance=1.0)
