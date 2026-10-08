@@ -104,9 +104,7 @@ class TestRunErcValidation:
         assert result["success"] is False
 
     def test_invalid_severity_rejected(self, tools):
-        result = asyncio.run(
-            tools["run_erc"](schematic_path=SCHEMATIC_PATH, severity="bogus")
-        )
+        result = asyncio.run(tools["run_erc"](schematic_path=SCHEMATIC_PATH, severity="bogus"))
         assert result["success"] is False
         assert "severity" in result["error"]
 
@@ -156,6 +154,39 @@ class TestRunErcParsing:
             assert "--exit-code-violations" not in cmd  # violations must not fail the run
             for flag in expected:
                 assert flag in cmd
+
+    def test_excluded_counted_separately(self, tools):
+        report = {
+            "coordinate_units": "mm",
+            "kicad_version": "10.0.3",
+            "source": "x.kicad_sch",
+            "sheets": [
+                {
+                    "path": "/",
+                    "violations": [
+                        {"type": "a", "severity": "error", "description": "e", "items": []},
+                        {"type": "b", "severity": "warning", "description": "w", "items": []},
+                        {
+                            "type": "c",
+                            "severity": "error",
+                            "excluded": True,
+                            "comment": "known false positive",
+                            "description": "x",
+                            "items": [],
+                        },
+                    ],
+                }
+            ],
+        }
+        with patch("kcaa.tools.erc_tools.run_kicad_command_async", new=_fake_cli(report)):
+            result = asyncio.run(tools["run_erc"](schematic_path=SCHEMATIC_PATH, severity="all"))
+        assert result["violation_count"] == 3
+        assert result["error_count"] == 1  # excluded error not counted as live
+        assert result["warning_count"] == 1
+        assert result["exclusion_count"] == 1
+        excluded = [v for v in result["violations"] if v["excluded"]]
+        assert len(excluded) == 1
+        assert excluded[0]["comment"] == "known false positive"
 
     def test_nonzero_exit_is_error(self, tools):
         with patch(

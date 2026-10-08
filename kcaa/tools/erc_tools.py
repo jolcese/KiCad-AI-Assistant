@@ -50,6 +50,11 @@ def _flatten_violations(report: dict[str, Any]) -> list[dict[str, Any]]:
                 {
                     "type": v.get("type", ""),
                     "severity": v.get("severity", ""),
+                    # An excluded marker keeps its underlying severity in the
+                    # JSON; the excluded state is a separate boolean field
+                    # (with an optional comment in KiCad 9/10).
+                    "excluded": bool(v.get("excluded", False)),
+                    "comment": v.get("comment", ""),
                     "description": v.get("description", ""),
                     "sheet": sheet_path,
                     "items": items,
@@ -96,6 +101,10 @@ def register_erc_tools(mcp: FastMCP) -> None:
                 "success": False,
                 "error": f"severity must be one of {sorted(_SEVERITY_FLAGS)} (got {severity!r})",
             }
+
+        if ctx is not None:
+            ctx.info(f"Running ERC on {os.path.basename(schematic_path)}")
+            await ctx.report_progress(10, 100)
 
         out_path = create_temp_file(suffix=".json", prefix="kcaa_erc_")
         # Deliberately omit --exit-code-violations so a schematic with
@@ -144,16 +153,29 @@ def register_erc_tools(mcp: FastMCP) -> None:
                 pass
 
         violations = _flatten_violations(report)
-        by_severity: dict[str, int] = {}
-        for v in violations:
-            by_severity[v["severity"]] = by_severity.get(v["severity"], 0) + 1
+        # Excluded markers keep their underlying severity but must not count as
+        # live errors/warnings; they are tallied separately. (With the default
+        # severity mask KiCad omits excluded items entirely; they only appear
+        # under severity="all".)
+        error_count = sum(1 for v in violations if v["severity"] == "error" and not v["excluded"])
+        warning_count = sum(
+            1 for v in violations if v["severity"] == "warning" and not v["excluded"]
+        )
+        exclusion_count = sum(1 for v in violations if v["excluded"])
+
+        if ctx is not None:
+            await ctx.report_progress(100, 100)
+            ctx.info(
+                f"ERC complete: {error_count} error(s), {warning_count} warning(s), "
+                f"{exclusion_count} excluded"
+            )
 
         return {
             "success": True,
             "violation_count": len(violations),
-            "error_count": by_severity.get("error", 0),
-            "warning_count": by_severity.get("warning", 0),
-            "exclusion_count": by_severity.get("exclusion", 0),
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "exclusion_count": exclusion_count,
             "violations": violations,
             "kicad_version": report.get("kicad_version"),
             "source": report.get("source"),
