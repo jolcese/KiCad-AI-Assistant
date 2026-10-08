@@ -116,13 +116,16 @@ if _WX_AVAILABLE:
             self._base_url = wx.TextCtrl(self._scrolled, value=self._settings.llm_base_url)
             grid.Add(self._base_url, 1, wx.EXPAND)
 
-            # --- Amazon Bedrock (only used when Provider = bedrock) ---
+            # --- Amazon Bedrock (shown only when Provider = bedrock) ---
             # Leave the AWS credential fields blank to authenticate with a
             # Bedrock API key (put it in the API Key field above); fill them in
-            # to sign requests with AWS SigV4 instead.
-            grid.Add(
-                wx.StaticText(self._scrolled, label="AWS Region:"), 0, wx.ALIGN_CENTER_VERTICAL
-            )
+            # to sign requests with AWS SigV4 instead. The label+field widgets
+            # are tracked in self._aws_rows so they can be shown/hidden by
+            # provider (see _update_aws_visibility).
+            self._aws_rows: list[tuple[wx.Window, wx.Window]] = []
+
+            region_label = wx.StaticText(self._scrolled, label="AWS Region:")
+            grid.Add(region_label, 0, wx.ALIGN_CENTER_VERTICAL)
             self._aws_region = wx.TextCtrl(
                 self._scrolled, value=getattr(self._settings, "llm_aws_region", "") or ""
             )
@@ -132,12 +135,10 @@ if _WX_AVAILABLE:
                 "(e.g. us-east-1). Also used for SigV4 signing."
             )
             grid.Add(self._aws_region, 1, wx.EXPAND)
+            self._aws_rows.append((region_label, self._aws_region))
 
-            grid.Add(
-                wx.StaticText(self._scrolled, label="AWS Access Key ID:"),
-                0,
-                wx.ALIGN_CENTER_VERTICAL,
-            )
+            access_label = wx.StaticText(self._scrolled, label="AWS Access Key ID:")
+            grid.Add(access_label, 0, wx.ALIGN_CENTER_VERTICAL)
             self._aws_access_key_id = wx.TextCtrl(
                 self._scrolled, value=getattr(self._settings, "llm_aws_access_key_id", "") or ""
             )
@@ -146,12 +147,10 @@ if _WX_AVAILABLE:
                 "Set this plus the secret key to authenticate with AWS SigV4."
             )
             grid.Add(self._aws_access_key_id, 1, wx.EXPAND)
+            self._aws_rows.append((access_label, self._aws_access_key_id))
 
-            grid.Add(
-                wx.StaticText(self._scrolled, label="AWS Secret Access Key:"),
-                0,
-                wx.ALIGN_CENTER_VERTICAL,
-            )
+            secret_label = wx.StaticText(self._scrolled, label="AWS Secret Access Key:")
+            grid.Add(secret_label, 0, wx.ALIGN_CENTER_VERTICAL)
             self._aws_secret_access_key = wx.TextCtrl(
                 self._scrolled,
                 value=getattr(self._settings, "llm_aws_secret_access_key", "") or "",
@@ -159,12 +158,10 @@ if _WX_AVAILABLE:
             )
             self._aws_secret_access_key.SetToolTip("Bedrock only. AWS secret key for SigV4 auth.")
             grid.Add(self._aws_secret_access_key, 1, wx.EXPAND)
+            self._aws_rows.append((secret_label, self._aws_secret_access_key))
 
-            grid.Add(
-                wx.StaticText(self._scrolled, label="AWS Session Token:"),
-                0,
-                wx.ALIGN_CENTER_VERTICAL,
-            )
+            token_label = wx.StaticText(self._scrolled, label="AWS Session Token:")
+            grid.Add(token_label, 0, wx.ALIGN_CENTER_VERTICAL)
             self._aws_session_token = wx.TextCtrl(
                 self._scrolled,
                 value=getattr(self._settings, "llm_aws_session_token", "") or "",
@@ -174,6 +171,7 @@ if _WX_AVAILABLE:
                 "Bedrock only. Optional STS session token for temporary AWS credentials."
             )
             grid.Add(self._aws_session_token, 1, wx.EXPAND)
+            self._aws_rows.append((token_label, self._aws_session_token))
 
             # User-Agent
             grid.Add(
@@ -314,8 +312,10 @@ if _WX_AVAILABLE:
             # Apply the provider's default model on open too, so a stored
             # provider whose Model field still holds another provider's default
             # (e.g. bedrock + leftover "gpt-4o") is corrected without needing to
-            # toggle the dropdown.
+            # toggle the dropdown. Also set the AWS fields' visibility to match
+            # the stored provider.
             self._maybe_fill_default_model()
+            self._update_aws_visibility()
 
         def _on_scroll_wheel(self, event) -> None:
             """Scroll the form by the wheel's rotation; never touch focus."""
@@ -327,8 +327,21 @@ if _WX_AVAILABLE:
             event.StopPropagation()
 
         def _on_provider_changed(self, event) -> None:
-            """Suggest a default model when the provider dropdown changes."""
+            """React to a provider selection change: suggest a default model
+            and show/hide the Bedrock-only AWS fields."""
             self._maybe_fill_default_model()
+            self._update_aws_visibility()
+
+        def _update_aws_visibility(self) -> None:
+            """Show the AWS/Bedrock credential rows only for the bedrock
+            provider; hide them (without clearing their values) otherwise, then
+            reflow the scrolled form."""
+            show = self._PROVIDERS[self._provider.GetSelection()] == "bedrock"
+            for label, field in self._aws_rows:
+                label.Show(show)
+                field.Show(show)
+            self._scrolled.Layout()
+            self._scrolled.FitInside()
 
         def _maybe_fill_default_model(self) -> None:
             """Pre-fill the Model field with the selected provider's default.

@@ -3800,7 +3800,9 @@ class TestAwsSigV4Headers:
     def test_authorization_structure(self):
         h = self._sign()
         assert h["Authorization"].startswith("AWS4-HMAC-SHA256 ")
-        assert "Credential=AKIDEXAMPLE/20260102/us-east-1/bedrock/aws4_request" in h["Authorization"]
+        assert (
+            "Credential=AKIDEXAMPLE/20260102/us-east-1/bedrock/aws4_request" in h["Authorization"]
+        )
         # host, content-type and x-amz-date are signed (sorted order)
         assert "SignedHeaders=content-type;host;x-amz-date" in h["Authorization"]
         assert h["X-Amz-Date"] == "20260102T030405Z"
@@ -3840,7 +3842,9 @@ class TestBedrockHeaders:
             llm_aws_access_key_id="AKID",
             llm_aws_secret_access_key="SECRET",
         )
-        url = "https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-opus-5-5/invoke"
+        url = (
+            "https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-opus-5-5/invoke"
+        )
         headers = client._bedrock_headers(url, b"{}")
         assert headers["Authorization"].startswith("AWS4-HMAC-SHA256 ")
         assert "X-Amz-Date" in headers
